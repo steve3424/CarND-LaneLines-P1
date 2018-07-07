@@ -1,0 +1,38 @@
+OVERVIEW OF PROJECT 
+
+Given a series of images (video) the task is to identify the lane lines, then draw them on each image.
+
+I conceptualize this being done in 2 phases: Pre-Hough phase and Post-Hough phase.
+Each phase consists of filtering out information that does not pertain to the lane lines I wish to find.
+
+PRE-HOUGH PHASE:
+1. Convert to gray scale: This gives 8-bit values of brightness from black to white...easier to work with
+
+2. Blur: gaussian blur 3x3 to filter out any noise.
+
+3. Canny edge detection: takes the blurred image and detects all of the edges in the image (hopefully including the lane lines)
+
+4. Mask the region of interest: this takes the image of black and white edges (Canny world) and picks out a section that is supposed to be relevant (the trapezoid in front of the car with the lane lines on each side)
+
+PRE-HOUGH FILTERING:
+(Canny parameters)
+-We want to make sure that Canny is detecting as few non-lane-line edges as possible. (Ideally Canny would detect ONLY the lane lines and no other edges, but this is impossible. In that case we would need no other filtering before Hough)
+
+(region of interest)
+-Then we want to make sure we are looking at as little area as possible that doesn't consist of the lane lines. (Since Canny will give us edges that aren't lane lines, we want to filter those out here by not looking at them)
+
+So now we have filtered out everything that is not an edge and everything that is far away from where the lane lines are likely to be. We are left with a small region of the original image that is a black background and white edges.
+
+#############################################################################################################################################
+
+POST-HOUGH PHASE:
+1. Run Hough Lines: In order to find out which of these edges consist of lines, we run Hough Lines. This will give us all of the lines in the image we created in the pre-hough phase.
+
+POST-HOUGH FILTERING:
+(Hough parameters)
+-Since the pre-hough filtering is likely to be imperfect, we will be running Hough on an image that contains edges (pixels) that are not part of a lane line.
+-Our recourse here is to tweak the Hough parameters so that it only sees the lane line edges as lines.
+-If this runs perfectly, all the lines we get from Hough will be lane lines. The task of drawing from this point would be trivial. Picking one line or averaging the lines and extrapolating would give us a great line to draw over the lane line.
+
+-Even after tweaking the Hough parameters we still will be left with some errant lines. Now we have to filter out the lines that Hough gave us that DO NOT represent the lane line. My method is to filter them out by slope. 
+-Lane lines are not horizontal, so anything within a certain proximity to 0 will be filtered out.
